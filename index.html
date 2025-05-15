@@ -1,1 +1,649 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriPlan AI - Personalized Diet Plans</title>
+    <style>
+        :root {
+            --primary: #2dd36f;
+            --primary-dark: #1db954;
+            --secondary: #2b3035;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --dark: #212529;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--dark);
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+        
+        .form-container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            color: var(--secondary);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(45, 211, 111, 0.2);
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 14px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .result-container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            padding: 30px;
+            display: none;
+        }
+        
+        .result-content {
+            white-space: pre-line;
+        }
+        
+        .spinner {
+            display: none;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .button-text {
+            display: inline;
+        }
+        
+        .health-metrics {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <div class="logo-icon">🥗</div>
+                NutriPlan AI
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="form-container">
+            <h1>Get Your Personalized Diet Plan</h1>
+            <div class="alert" id="errorAlert"></div>
+            
+            <form id="dietForm">
+                <div class="form-grid">
+                    <div>
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" placeholder="Your name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" min="16" max="100" placeholder="Your age" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" required>
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="non-binary">Non-binary</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="height">Height (cm)</label>
+                            <input type="number" id="height" min="100" max="250" placeholder="Your height in cm" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="weight">Weight (kg)</label>
+                            <input type="number" id="weight" min="30" max="300" placeholder="Your weight in kg" required>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="form-group">
+                            <label for="activityLevel">Activity Level</label>
+                            <select id="activityLevel" required>
+                                <option value="">Select activity level</option>
+                                <option value="sedentary">Sedentary (little or no exercise)</option>
+                                <option value="light">Lightly active (light exercise 1-3 days/week)</option>
+                                <option value="moderate">Moderately active (moderate exercise 3-5 days/week)</option>
+                                <option value="active">Active (hard exercise 6-7 days/week)</option>
+                                <option value="very-active">Very active (very hard exercise & physical job)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="goal">Primary Goal</label>
+                            <select id="goal" required>
+                                <option value="">Select your goal</option>
+                                <option value="weight-loss">Weight Loss</option>
+                                <option value="muscle-gain">Muscle Gain</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="general-health">General Health Improvement</option>
+                                <option value="athletic-performance">Athletic Performance</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="dietaryRestrictions">Dietary Restrictions</label>
+                            <select id="dietaryRestrictions" multiple size="4">
+                                <option value="vegetarian">Vegetarian</option>
+                                <option value="vegan">Vegan</option>
+                                <option value="gluten-free">Gluten-Free</option>
+                                <option value="dairy-free">Dairy-Free</option>
+                                <option value="keto">Keto</option>
+                                <option value="paleo">Paleo</option>
+                                <option value="low-carb">Low-Carb</option>
+                            </select>
+                            <small>Hold Ctrl/Cmd to select multiple</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="additionalInfo">Additional Information</label>
+                            <textarea id="additionalInfo" placeholder="Any allergies, food preferences, health conditions, or other relevant information..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" id="generateButton">
+                    <span class="button-text">Generate Diet Plan</span>
+                    <div class="spinner" id="spinner"></div>
+                </button>
+            </form>
+        </div>
+        
+        <div class="result-container" id="resultContainer">
+            <h1>Your Personalized Diet Plan</h1>
+            
+            <div class="health-metrics" id="healthMetrics"></div>
+            
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('dietForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            document.getElementById('spinner').style.display = 'block';
+            document.querySelector('.button-text').textContent = 'Generating...';
+            document.getElementById('generateButton').disabled = true;
+            document.getElementById('errorAlert').style.display = 'none';
+            
+            // Get form values
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const height = document.getElementById('height').value;
+            const weight = document.getElementById('weight').value;
+            const activityLevel = document.getElementById('activityLevel').value;
+            const goal = document.getElementById('goal').value;
+            
+            // Get multiple selected dietary restrictions
+            const dietaryRestrictions = Array.from(
+                document.getElementById('dietaryRestrictions').selectedOptions
+            ).map(option => option.value);
+            
+            const additionalInfo = document.getElementById('additionalInfo').value;
+            
+            // Calculate BMI and basic metrics
+            const bmi = (weight / ((height / 100) * (height / 100))).toFixed(1);
+            let bmiCategory = '';
+            
+            if (bmi < 18.5) bmiCategory = 'Underweight';
+            else if (bmi < 25) bmiCategory = 'Normal weight';
+            else if (bmi < 30) bmiCategory = 'Overweight';
+            else bmiCategory = 'Obese';
+            
+            // Display health metrics
+            const healthMetricsHtml = `
+                <strong>BMI:</strong> ${bmi} (${bmiCategory})<br>
+                <strong>Height:</strong> ${height} cm<br>
+                <strong>Weight:</strong> ${weight} kg
+            `;
+            document.getElementById('healthMetrics').innerHTML = healthMetricsHtml;
+            
+            // In a real implementation, you would make an API call here
+            // For this demo, we'll simulate an API call with a timeout
+            setTimeout(() => {
+                try {
+                    // Generate diet plan based on user inputs
+                    const dietPlan = generateDietPlan({
+                        name, age, gender, height, weight,
+                        activityLevel, goal, dietaryRestrictions, additionalInfo
+                    });
+                    
+                    // Display the result
+                    document.getElementById('resultContent').textContent = dietPlan;
+                    document.getElementById('resultContainer').style.display = 'block';
+                    
+                    // Scroll to results
+                    document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth' });
+                } catch (error) {
+                    document.getElementById('errorAlert').textContent = 'An error occurred: ' + error.message;
+                    document.getElementById('errorAlert').style.display = 'block';
+                } finally {
+                    // Reset button state
+                    document.getElementById('spinner').style.display = 'none';
+                    document.querySelector('.button-text').textContent = 'Generate Diet Plan';
+                    document.getElementById('generateButton').disabled = false;
+                }
+            }, 2000); // Simulate 2 second API call
+        });
+        
+        // In a real implementation, this would be an API call to an AI service
+        function generateDietPlan(userData) {
+            // Calculate basic caloric needs using Harris-Benedict formula
+            let bmr;
+            if (userData.gender === 'male') {
+                bmr = 88.362 + (13.397 * userData.weight) + (4.799 * userData.height) - (5.677 * userData.age);
+            } else {
+                bmr = 447.593 + (9.247 * userData.weight) + (3.098 * userData.height) - (4.330 * userData.age);
+            }
+            
+            // Activity multiplier
+            let activityMultiplier;
+            switch (userData.activityLevel) {
+                case 'sedentary': activityMultiplier = 1.2; break;
+                case 'light': activityMultiplier = 1.375; break;
+                case 'moderate': activityMultiplier = 1.55; break;
+                case 'active': activityMultiplier = 1.725; break;
+                case 'very-active': activityMultiplier = 1.9; break;
+                default: activityMultiplier = 1.2;
+            }
+            
+            // Calculate TDEE (Total Daily Energy Expenditure)
+            let tdee = Math.round(bmr * activityMultiplier);
+            
+            // Adjust calories based on goal
+            let goalCalories;
+            let proteinMultiplier;
+            let carbMultiplier;
+            let fatMultiplier;
+            
+            switch (userData.goal) {
+                case 'weight-loss':
+                    goalCalories = tdee - 500; // 500 calorie deficit
+                    proteinMultiplier = 2.0; // Higher protein for weight loss
+                    carbMultiplier = 0.5;
+                    fatMultiplier = 0.25;
+                    break;
+                case 'muscle-gain':
+                    goalCalories = tdee + 300; // Caloric surplus
+                    proteinMultiplier = 1.8;
+                    carbMultiplier = 0.7;
+                    fatMultiplier = 0.25;
+                    break;
+                case 'athletic-performance':
+                    goalCalories = tdee + 200;
+                    proteinMultiplier = 1.7;
+                    carbMultiplier = 0.85;
+                    fatMultiplier = 0.25;
+                    break;
+                default: // maintenance or general health
+                    goalCalories = tdee;
+                    proteinMultiplier = 1.6;
+                    carbMultiplier = 0.6;
+                    fatMultiplier = 0.3;
+            }
+            
+            // Calculate macros
+            const proteinGrams = Math.round(userData.weight * proteinMultiplier);
+            const proteinCalories = proteinGrams * 4;
+            
+            let carbGrams = Math.round(userData.weight * carbMultiplier);
+            let fatGrams = Math.round(userData.weight * fatMultiplier);
+            
+            // Adjust for dietary restrictions
+            if (userData.dietaryRestrictions.includes('keto') || userData.dietaryRestrictions.includes('low-carb')) {
+                carbGrams = Math.round(userData.weight * 0.2); // Much lower carbs
+                fatGrams = Math.round((goalCalories - proteinCalories - (carbGrams * 4)) / 9);
+            }
+            
+            const carbCalories = carbGrams * 4;
+            const fatCalories = fatGrams * 9;
+            
+            // Generate the actual diet plan text
+            // In a real implementation, this would call the AI API
+            return `
+Dear ${userData.name},
+
+Based on your profile (${userData.age} years old, ${userData.gender}, ${userData.height}cm, ${userData.weight}kg) and your goal of ${userData.goal.replace('-', ' ')}, I've created a personalized nutrition plan for you.
+
+DAILY CALORIC TARGET: ${goalCalories} calories
+
+MACRONUTRIENT BREAKDOWN:
+• Protein: ${proteinGrams}g (${Math.round(proteinCalories)} calories, ${Math.round(proteinCalories/goalCalories*100)}% of diet)
+• Carbohydrates: ${carbGrams}g (${Math.round(carbCalories)} calories, ${Math.round(carbCalories/goalCalories*100)}% of diet)
+• Fats: ${fatGrams}g (${Math.round(fatCalories)} calories, ${Math.round(fatCalories/goalCalories*100)}% of diet)
+
+MEAL PLAN STRUCTURE:
+
+BREAKFAST (${Math.round(goalCalories * 0.25)} calories)
+${generateMealSuggestions('breakfast', userData.dietaryRestrictions, userData.goal)}
+
+MID-MORNING SNACK (${Math.round(goalCalories * 0.1)} calories)
+${generateMealSuggestions('snack', userData.dietaryRestrictions, userData.goal)}
+
+LUNCH (${Math.round(goalCalories * 0.3)} calories)
+${generateMealSuggestions('lunch', userData.dietaryRestrictions, userData.goal)}
+
+AFTERNOON SNACK (${Math.round(goalCalories * 0.1)} calories)
+${generateMealSuggestions('snack', userData.dietaryRestrictions, userData.goal)}
+
+DINNER (${Math.round(goalCalories * 0.25)} calories)
+${generateMealSuggestions('dinner', userData.dietaryRestrictions, userData.goal)}
+
+HYDRATION:
+• Aim for ${Math.round(userData.weight * 0.033)} liters of water daily
+• Limit caffeine to no more than 400mg daily
+• Minimize alcohol consumption
+
+ADDITIONAL RECOMMENDATIONS:
+${generateRecommendations(userData)}
+
+IMPORTANT NOTES:
+• This plan is a starting point based on calculations and should be adjusted based on your progress
+• Consider consulting with a registered dietitian for more personalized guidance
+• If you have any health conditions, please consult your doctor before starting this plan
+• Tracking your food intake for at least the first few weeks will help ensure you're meeting your targets
+
+I hope this helps you achieve your ${userData.goal.replace('-', ' ')} goals!
+            `;
+        }
+        
+        function generateMealSuggestions(mealType, restrictions, goal) {
+            // In a real implementation, the AI would generate these based on preferences
+            // This is a simplified version with predefined options based on restrictions
+            
+            const mealOptions = {
+                breakfast: {
+                    default: [
+                        "Oatmeal with berries and a tablespoon of honey, 2 scrambled eggs",
+                        "Whole grain toast with avocado and 2 poached eggs",
+                        "Greek yogurt with granola, nuts, and fresh fruit"
+                    ],
+                    vegetarian: [
+                        "Overnight oats with chia seeds, almond milk, and berries",
+                        "Smoothie with spinach, banana, plant protein, and almond milk",
+                        "Whole grain toast with almond butter and sliced banana"
+                    ],
+                    vegan: [
+                        "Tofu scramble with vegetables and nutritional yeast",
+                        "Chia seed pudding with coconut milk and fresh fruit",
+                        "Avocado toast with hemp seeds on sourdough bread"
+                    ],
+                    keto: [
+                        "Avocado and bacon omelet with spinach",
+                        "Chia pudding made with full-fat coconut milk and berries",
+                        "Coconut flour pancakes with sugar-free syrup"
+                    ]
+                },
+                lunch: {
+                    default: [
+                        "Grilled chicken salad with mixed greens, vegetables, and olive oil dressing",
+                        "Quinoa bowl with roasted vegetables and salmon",
+                        "Turkey and avocado wrap with side salad"
+                    ],
+                    vegetarian: [
+                        "Lentil soup with whole grain bread",
+                        "Chickpea salad with feta cheese and olive oil dressing",
+                        "Veggie burger on whole grain bun with sweet potato fries"
+                    ],
+                    vegan: [
+                        "Buddha bowl with quinoa, roasted vegetables, and tahini dressing",
+                        "Lentil and vegetable soup with whole grain bread",
+                        "Tempeh and vegetable stir-fry with brown rice"
+                    ],
+                    keto: [
+                        "Cobb salad with chicken, bacon, avocado, and blue cheese dressing",
+                        "Lettuce-wrapped burgers with cheese and avocado",
+                        "Zucchini noodles with alfredo sauce and grilled chicken"
+                    ]
+                },
+                dinner: {
+                    default: [
+                        "Grilled salmon with roasted asparagus and quinoa",
+                        "Lean beef stir-fry with vegetables and brown rice",
+                        "Baked chicken with sweet potato and steamed broccoli"
+                    ],
+                    vegetarian: [
+                        "Shakshuka (eggs poached in tomato sauce) with feta cheese",
+                        "Stuffed bell peppers with quinoa, black beans, and cheese",
+                        "Vegetable curry with tofu and brown rice"
+                    ],
+                    vegan: [
+                        "Chickpea and vegetable curry with brown rice",
+                        "Lentil bolognese with zucchini noodles",
+                        "Black bean and sweet potato enchiladas with salsa"
+                    ],
+                    keto: [
+                        "Baked salmon with asparagus and hollandaise sauce",
+                        "Beef and vegetable stir-fry (no rice)",
+                        "Chicken thighs with creamy mushroom sauce and cauliflower mash"
+                    ]
+                },
+                snack: {
+                    default: [
+                        "Apple with a tablespoon of almond butter",
+                        "Greek yogurt with berries",
+                        "Hard-boiled egg and a piece of fruit"
+                    ],
+                    vegetarian: [
+                        "Cottage cheese with fruit",
+                        "Hummus with vegetable sticks",
+                        "Trail mix with nuts and dried fruit"
+                    ],
+                    vegan: [
+                        "Edamame beans with sea salt",
+                        "Apple slices with almond butter",
+                        "Roasted chickpeas with spices"
+                    ],
+                    keto: [
+                        "Celery sticks with cream cheese",
+                        "String cheese and a few almonds",
+                        "Half an avocado with salt and pepper"
+                    ]
+                }
+            };
+            
+            // Determine which set of meal options to use
+            let dietType = 'default';
+            if (restrictions.includes('vegan')) {
+                dietType = 'vegan';
+            } else if (restrictions.includes('vegetarian')) {
+                dietType = 'vegetarian';
+            } else if (restrictions.includes('keto') || restrictions.includes('low-carb')) {
+                dietType = 'keto';
+            }
+            
+            // Select a random meal option from the appropriate list
+            const options = mealOptions[mealType][dietType];
+            return options[Math.floor(Math.random() * options.length)];
+        }
+        
+        function generateRecommendations(userData) {
+            let recommendations = [];
+            
+            // Base recommendations on goal
+            if (userData.goal === 'weight-loss') {
+                recommendations.push("• Focus on high-volume, low-calorie foods like vegetables and lean proteins");
+                recommendations.push("• Consider intermittent fasting approaches if they suit your lifestyle");
+                recommendations.push("• Prioritize sleep as poor sleep can increase hunger hormones");
+            } else if (userData.goal === 'muscle-gain') {
+                recommendations.push("• Consume protein within 30 minutes after strength training");
+                recommendations.push("• Consider creatine supplementation (5g daily) for improved strength and recovery");
+                recommendations.push("• Ensure adequate carbohydrate intake around training sessions");
+            } else if (userData.goal === 'athletic-performance') {
+                recommendations.push("• Time carbohydrate intake around your training sessions");
+                recommendations.push("• Consider a 4:1 carb-to-protein ratio post-workout for optimal recovery");
+                recommendations.push("• Monitor hydration status - even mild dehydration impacts performance");
+            } else {
+                recommendations.push("• Focus on nutrient density rather than just calories");
+                recommendations.push("• Aim for at least 5 servings of different colored fruits and vegetables daily");
+                recommendations.push("• Consider omega-3 supplementation if you don't regularly consume fatty fish");
+            }
+            
+            // Add recommendations based on activity level
+            if (userData.activityLevel === 'sedentary' || userData.activityLevel === 'light') {
+                recommendations.push("• Gradually increase physical activity with a goal of 150+ minutes per week");
+                recommendations.push("• Incorporate more movement throughout your day (take stairs, walking meetings)");
+            }
+            
+            // Add age-specific recommendations
+            if (userData.age > 50) {
+                recommendations.push("• Consider vitamin D and calcium supplementation for bone health");
+                recommendations.push("• Prioritize protein intake (aim for the higher end of recommendations)");
+            }
+            
+            return recommendations.join("\n");
+        }
+    </script>
+</body>
+</html>
